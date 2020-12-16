@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 指定字符集 -->
+    <meta charset="utf-8">
+    <!-- 使用Edge最新的浏览器的渲染方式 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- viewport视口：网页可以根据设置的宽度自动进行适配，在浏览器的内部虚拟一个容器，容器的宽度与设备的宽度相同。
+    width: 默认宽度与设备的宽度相同
+    initial-scale: 初始的缩放比，为1:1 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <title>用户信息管理系统</title>
+
+    <!-- 1. 导入CSS的全局样式 -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- 2. jQuery导入，建议使用1.9以上的版本 -->
+    <script src="js/jquery-2.1.0.min.js"></script>
+    <!-- 3. 导入bootstrap的js文件 -->
+    <script src="js/bootstrap.min.js"></script>
+    <style type="text/css">
+        td, th {
+            text-align: center;
+        }
+    </style>
+    <script>
+
+        /*全局变量*/
+        var totalCount;
+        var totalPage;
+        var rows;
+        var currentPage;
+
+
+        var address;
+        var itName;
+        var email;
+
+
+        //获取参数
+        function getQueryString(name) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+            var r = window.location.search.substr(1).match(reg);
+            if (r != null) return decodeURI(r[2]);
+            return null;
+        }
+
+
+        function deleteUser(id) {
+            if (confirm("您确定要删除吗?")) {
+                location.href = "user/delUser?id=" + id + "&currentPage=" + currentPage;
+            }
+        }
+
+        /*一加载完就更新信息*/
+        $(function () {
+            address = getQueryString("address");
+            itName = getQueryString("name");
+            email = getQueryString("email");
+            currentPage=getQueryString("currentPage");
+
+            if (address != null) {
+                $("input[name='address']").val(address);
+            } else {
+                address = "";
+            }
+            if (email != null) {
+
+                $("input[name='email']").val(email);
+            } else {
+                email = "";
+            }
+            if (itName != null) {
+
+                $("input[name='name']").val(itName);
+
+
+            } else {
+                itName = "";
+            }
+            if (currentPage== null) {
+                currentPage = 1;
+            }
+
+
+            $.ajax({
+                url: "user/findUserByPage",
+                type: "POST",
+                data: $("#searchForm").serialize() + "&currentPage=" + currentPage,
+                success: function (data) {
+                    //alert("成功了");
+                    totalCount = Number(data.totalCount);
+                    totalPage = Number(data.totalPage);
+                    rows = Number(data.rows);
+                    /*///////////////////////////分页操作/////////////////////////*/
+                    /*循环生成分页*/
+                    for (var i = 1; i <= totalPage; i++) {
+                        var li = "<li class='liBeDel' id='navLi" + i + "'><a href='list.html?currentPage=" + i + "&address=" + $("input[name='address']").val() + "&name=" + $("input[name='name']").val() + "&email=" + $("input[name='email']").val() + "'  >" + i + "</a></li>";
+                        $("#navLast").before(li);
+                    }
+                    /*页面在第一页,上一页按不了*/
+                    var str = "#navLi" + currentPage;
+                    $(str).addClass("active");
+
+
+                    /*设计上一页标签的href与禁用标识*/
+                    /*处于第一页*/
+                    if (currentPage == 1) {
+                        $("#navFirst").prop("class", "disabled");/*禁止标志*/
+                        //不给上一页设置href,它本来就是#
+                    } else {
+                        var a = Number(currentPage) - 1;
+                        //设置跳转上一页
+                        $("#navFirst a").prop("href", "list.html?currentPage=" + a + "&address=" + address + "&name=" + itName + "&email=" + email);
+                    }
+
+
+                    /*设计下一页标签的href与禁用标识*/
+                    /*处于最后一页*/
+                    if (currentPage == totalPage) {
+                        $("#navLast").prop("class", "disabled");/*禁止标志*/
+                        //不给最后一页设置href,它本来就是#
+                    } else {
+                        var b = Number(currentPage) + 1;
+
+                        $("#navLast a").prop("href", 'list.html?currentPage=' + b + "&address=" + address + "&name=" + itName + "&email=" + email);
+
+                    }
+
+                    var tdId = (currentPage - 1) * rows + 1;/*从1--总数据数 展示的序号*/
+                    /*///////////////////////////分页操作/////////////////////////*/
+                    /*///////////////////////////输入数据到表单///////////////////*/
+                    for (var i = 0; i < data.list.length; i++) {
+                        var p = data.list[i];
+                        var tr = "<tr id='tr" + i + "'></tr>";
+                        $("#table").append(tr);
+                        var trId = "#tr" + i;/*用来记录tr的ID*/
+                        /*复选框*/
+                        var id = p["id"];/*用来帮助绑定多选来执行删除操作*/
+                        var checkbox1 = "<td><input type='checkbox' id='uid' name='selectedId' value='" + id + "'></td>"
+                        $(trId).append(checkbox1);
+                        /*中间数据*/
+                        for (var key in p) {
+                            /*将Id换为从1开始增加的数*/
+                            if (key == "id") {
+                                var td = "<td>" + tdId + "</td>";
+                                tdId++;
+                                $(trId).append(td);
+                            } else {
+                                var td = "<td>" + p[key] + "</td>";
+                                $(trId).append(td);
+                            }
+                        }
+                        /*修改,删除按钮*/
+                        var change = "<td><a class=\"btn btn-default btn-sm\" href='update.html?id=" + id + "&currentPage=" + currentPage + "' >修改</a> <a class=\"btn btn-default btn-sm\" href=\"javascript:deleteUser(" + id + ");\">删除</a></td>"
+                        $(trId).append(change);
+                        /*///////////////////////////输入数据到表单///////////////////*/
+                    }
+                    var msg = "一共有" + totalPage + "页," + totalCount + "条纪录";
+                    $("#navMsg").text(msg);
+                    /*表格上色*/
+                    $("tr:even").addClass("success");
+                    $("tr:odd").addClass("active");
+
+                },
+                dataType: "json",
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert("ajax失败了扑街");
+                    /*弹出jqXHR对象的信息*/
+                    /*alert(jqXHR.responseText);
+                    alert(jqXHR.status);
+                    alert(jqXHR.readyState);
+                    alert(jqXHR.statusText);*/
+                    /*弹出其他两个参数的信息*/
+                    /*alert(textStatus);
+                    alert(errorThrown);*/
+                }
+            });
+
+        });
+
+        $(function () {
+            document.getElementById("delSelected").onclick = function () {
+
+                $("#form").prop("action", "user/delSelected?currentPage=" + currentPage +"&name="+$("input[name='name']").val()+"&email="+$("input[name='email']").val()+"&address="+$("input[name='address']").val());
+                if (confirm("您确定要删除吗?")) {
+                    document.getElementById("form").submit();
+                }
+            };
+
+
+            document.getElementById("firstCb").onclick = function () {
+                var cbs = document.getElementsByName("selectedId");
+                for (var i = 0; i < cbs.length; i++) {
+                    cbs[i].checked = this.checked;/*更换状态*/
+                }
+            };
+
+            $("#searchButton").on("click",function(){
+                var msg="list.html?"+"address="+$("input[name='address']").val()+"&name="+$("input[name='name']").val()+"&email="+$("input[name='email']").val();
+                window.location.href=msg;//这样是把msg加到虚拟路径后跳转
+            });
+        });
+
+    </script>
+
+</head>
+<body>
+
+
+<div class="container">
+    <h3 style="text-align: center">用户信息列表</h3>
+    <div>
+        <div style="float: left">
+            <form class="form-inline" id="searchForm" action="list.html" method="get">
+                <div class="form-group">
+                    <label for="exampleInputName2">名字</label>
+                    <input type="text" class="form-control" value="" name="name" id="exampleInputName2">
+                </div>
+
+                <div class="form-group">
+                    <label for="exampleInputEmail2">籍贯</label>
+                    <input type="text" class="form-control" value="" name="address" id="exampleInputEmail2">
+                </div>
+
+                <div class="form-group">
+                    <label for="exampleInputEmail2">Email</label>
+                    <input type="text" class="form-control" value="" name="email" id="exampleInputEmail3">
+                </div>
+                <button type="button" id="searchButton" class="btn btn-default">查询</button>
+            </form>
+        </div>
+        <div style="float: right ;margin: 8px;"><!--<%&#45;&#45;css行内式样式&#45;&#45;%>-->
+
+            <a class="btn btn-primary" href="add.html">添加联系人</a>
+            <a class="btn btn-primary" href="javascript:void(0)" id="delSelected">删除选中</a>
+        </div>
+    </div>
+
+    <!--///////////////////////////////////展示信息/////////
+        <%&#45;&#45;用来所有删除勾选的信息&#45;&#45;%>-->
+    <div id="ajaxSpan"><!--异步区块-->
+        <form id="form" action="" method="post">
+
+            <table border="1" class="table table-bordered table-striped table-hover" id="table">
+                <tr class="success notDel ">
+                    <th><input type="checkbox" id="firstCb"></th>
+                    <th>编号</th>
+                    <th>姓名</th>
+                    <th>性别</th>
+                    <th>年龄</th>
+                    <th>籍贯</th>
+                    <th>QQ</th>
+                    <th>邮箱</th>
+                    <th>操作</th>
+                </tr>
+
+
+            </table>
+
+        </form>
+        <div>
+            <!--分页条-->
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    <li id="navFirst">
+                        <a href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+
+                    <li id="navLast">
+                        <a href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <span id="navMsg" style="font-size: 22px;margin: 10px"></span>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

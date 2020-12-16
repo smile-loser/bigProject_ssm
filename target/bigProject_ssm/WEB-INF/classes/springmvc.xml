@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation=" http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!--springMVC框架配置文件-->
+
+    <!--开启spring框架的注解扫描，但是只能扫描Controller,这里是mvc不能越界，其他交给spring-->
+    <context:component-scan base-package="dyz.ssmUnion">
+        <!--只能扫描Controller注解-->
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+
+    <!--开启异常处理器-->
+    <bean id="handlerExceptionResolver" class="dyz.ssmUnion.exceptionResolver.MyExceptionResolver"/>
+
+    <!--开启视图解析器-->
+    <bean id="internalResourceViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/pages/"/><!--prefix前缀  路径-->
+        <property name="suffix" value=".html"/><!--suffix后缀 .html得设置-->
+    </bean>
+    <!-- 配置静态资源,配置静态资源是必须的，否则spring mvc会把**.html文件当成是一个请求，
+    上面的跳转jsp不需要配置是因为tomcat默认把jsp文件当成是静态资源 -->
+    <mvc:default-servlet-handler/>
+
+    <!--过滤静态资源，让前端控制器不拦截哪些资源-->
+    <mvc:resources location="/js/" mapping="/js/**/"/>
+    <mvc:resources location="/css/" mapping="/css/**/"/>
+    <mvc:resources location="/images/" mapping="/images/**/"/>
+
+
+    <!--开启SpringMVC对注解的支持，扫描到RequestMapping-->
+    <!--自动加载处理器映射器HandlerMapping,处理器适配器HandlerAdapter-->
+
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter"/>
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"/>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+
+</beans>

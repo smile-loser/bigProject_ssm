@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+                    <!--spring框架配置文件-->
+
+    <!--spring框架开启注解的扫描。希望去处理service和dao,Controller交给MVC处理，不需要spring框架处理-->
+    <context:component-scan base-package="dyz.ssmUnion">
+        <!--配置哪些注解不扫描-->
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+
+    <!--spring整合MyBatis框架，就是要把Mybatis配置dao接口的代理对象
+        配置入Spring中，使得能够实现自动注入因为dao由sqpSession对象获得
+        sqlSession对象是由SqlSessionFactory对象获得，这些都得配置
+    -->
+    <!--spring配置mybatis-->
+    <!--配置连接池-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="com.mysql.jdbc.Driver"/>
+        <property name="jdbcUrl" value="jdbc:mysql:///day17?&amp;useSSL=false&amp;serverTimezone=UTC"/>
+        <property name="user" value="root"/>
+        <property name="password" value="2537716149a,"/>
+    </bean>
+
+    <!--配置SqlSessionFactory, SqlSessionFactoryBean这个类是整合过的类
+        可以直接传入连接池就能配出sqlSessionFactory
+    -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--配置AccountDao接口所在的包，MapperScannerConfigurer是整合过的类
+        它通过扫描dao接口所在的包来确定要从session那获得的代理对象，然后存进IOC容器里
+    -->
+    <bean id="mapperScanner" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="dyz.ssmUnion.dao"/>
+    </bean>
+
+    <!--配置spring框架声明式管理-->
+    <!--配置事务管理器-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--配置事务通知-->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="find*" read-only="true"/>
+            <tx:method name="*" isolation="DEFAULT"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--配置AOP加强-->
+    <aop:config>
+        <aop:advisor advice-ref="txAdvice" pointcut="execution(* dyz.ssmUnion.service.impl.*ServiceImpl.*(..))"/>
+    </aop:config>
+
+</beans>
+
+
+
+
+
+
+

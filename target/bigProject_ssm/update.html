@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 指定字符集 -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>修改用户</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <script src="js/jquery-2.1.0.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+
+    <script>
+
+        //获取参数
+        function getQueryString(name) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+            var r = window.location.search.substr(1).match(reg);
+            if (r != null) return decodeURI(r[2]);
+            return null;
+        }
+
+        $(function () {
+            $("#getBack").on("click", function () {
+                location.href = " list.html";
+            });
+            $("#id").val(getQueryString("id"));
+            $.getJSON('user/findUserById', "id="+getQueryString("id"), function (data) {
+                $("input[name='id']").prop("value",data.id);
+                $("input[name='name']").val(data.name);
+                $("#age").val(Number(data.age));
+                $("#qq").val(data.qq);
+                $("#email").val(data.email);
+                if (data.gender == "女") {
+                    $("input[name='gender'][value='女']").prop("checked", "checked");
+                }
+                if (data.address == "广西") {
+                    $("input[name='address'][value='广西']").prop("selected",true)
+                }
+                if (data.address == "湖南") {
+                    $("input[name='address'][value='湖南']").prop("selected",true)
+                }
+
+            });
+        });
+
+    </script>
+
+</head>
+<body>
+<div class="container" style="width: 400px;">
+    <h3 style="text-align: center;">修改联系人</h3>
+    <form action="user/updateUser" method="post">
+
+        <!--设置隐藏的id在提交的时候能提交id-->
+        <input type="hidden" name="id"  value=""/> <!--设置隐藏的id在提交的时候能提交id-->
+
+
+        <div class="form-group">
+            <label for="name">姓名：</label>
+            <input type="text" class="form-control" id="name" name="name" value="" readonly="readonly"
+                   placeholder="请输入姓名"/>
+        </div>
+
+        <div class="form-group">
+            <!--             这里可能遇到性别填空的，这些都要在填表提交前限制它们
+                     redio加上checked就是被选上-->
+
+            <label>性别：</label>
+            <input type="radio" name="gender" value="男" checked/>男
+            <input type="radio" name="gender" value="女"/>女
+
+        </div>
+
+        <div class="form-group">
+            <label for="age">年龄：</label>
+            <input type="text" class="form-control" value="" id="age" name="age" placeholder="请输入年龄"/>
+        </div>
+
+        <div class="form-group">
+            <label for="address">籍贯：</label>
+            <!--这里可能遇到籍贯填空的，这些都要在填表提交前限制它们
+            select加上selected就是被选上-->
+
+            <select name="address" id="address" class="form-control">
+                <option value="广东">广东</option>
+                <option value="广西">广西</option>
+                <option value="湖南">湖南</option>
+
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="qq">QQ：</label>
+            <input type="text" class="form-control" value="" id="qq" name="qq" placeholder="请输入QQ号码"/>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email：</label>
+            <input type="text" class="form-control" id="email" value="" name="email" placeholder="请输入邮箱地址"/>
+        </div>
+
+        <div class="form-group" style="text-align: center">
+            <input class="btn btn-primary" type="submit" value="提交"/>
+            <input class="btn btn-default" type="reset" value="重置"/>
+            <input class="btn btn-default" type="button" id="getBack" value="返回"/>
+        </div>
+    </form>
+</div>
+</body>
+</html>

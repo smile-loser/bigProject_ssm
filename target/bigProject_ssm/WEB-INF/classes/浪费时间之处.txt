@@ -1,0 +1,32 @@
+1.动态sql在注解里的使用，dao里面参数太多得用@Param绑定参数
+2.input元素得通过$("input[name='']")来选择,错，真实情况是w那些input的id没有被命名成他们的name 所以$("#id")获取不到
+3.json数据一直传不到前台，没有报错信息，无从下手，所有从ajax error方法弹出了那些东西
+               /*弹出jqXHR对象的信息*/
+                                  alert(jqXHR.responseText);
+                                  alert(jqXHR.status);
+                                  alert(jqXHR.readyState);
+                                  alert(jqXHR.statusText);
+                                  /*弹出其他两个参数的信息*/
+                                  alert(textStatus);
+                                  alert(errorThrown);
+    再从那些信息里得到报错信息，搜索得到解决办法
+
+
+4.特别恶心的问题，js使用一些变量名不可以，比如name,name虽然不是关键字也不是保留字，但它是属性，不能作为变量名，类似的有top，location，self，但left，bottom却可以，原因是这些变量名是JS的主机变量，永远不能被重新声明
+
+5/给隐藏起来的Input id赋值时候没有给value赋值，即value="" 导致出现了controller数据封装的异常，
+  真正原因是你定义user里面需要封装的数据input value没有赋值时，表单提交，封装时都会出现异常
+  意思是 我age input value="" 提交也会出现异常
+
+6.在使用response.sendredirect(url)进行重定向时，遇到中文字符，如果不做任何处理，则在后台无法得到正确的中文字符
+        String encoder = "utf-8";
+        String s = URLEncoder.encode("中国必胜",encoder);
+        String url = Util.newPath+"/getDemandListInter.do?s="+s;
+
+        response.sendRedirect(url);
+
+7. 会出现异常的时候，age封装时是int型的，如果age=字符时封装失败
+
+
+8.注意WEB-INF里面的资源是特殊的的，不能直接被跳转到（就是重定向），但应该可以被转发（return可以），里面的资源不能访问WEB-INF外面的资源
+    ，那个error网页就不能访问到外面的资源，所以要把css,images那些弄到WEB-INF里面
